@@ -1,3 +1,4 @@
+# rclone configuration steps https://rclone.org/onedrive/
 echo "Free space available on external disks is"
 df -lh /dev/sdc1 |awk '{print $4}'
 echo "Please adjest space available on /dev/sdc1 meanwhile through anothere terminal"
