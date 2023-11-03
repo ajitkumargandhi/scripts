@@ -1,0 +1,10 @@
+powershell wget https://www.stunnel.org/downloads/stunnel-5.71-win64-installer.exe
+stunnel-5.71-win64-installer.exe /AllUsers /S
+del  "C:\Users\Public\Desktop\stunnel AllUsers.lnk"
+ren "C:\Program Files (x86)\stunnel\config\stunnel.conf" "C:\Program Files (x86)\stunnel\config\stunnel.conf.org" 
+copy \\SERVER1\Share\stunnel.conf "C:\Program Files (x86)\stunnel\config\
+"C:\Program Files (x86)\stunnel\bin\openssl.exe" rand -base64 64 > test.txt
+for /f %i in (test.txt) do echo %username%:%i >"C:\Program Files (x86)\stunnel\config\psk.txt"
+del test.txt
+"C:\Program Files (x86)\stunnel\bin\stunnel.exe" -install -quiet
+powershell Start-Service stunnel
