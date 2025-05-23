@@ -1,0 +1,3 @@
+ipofdevice,locationofdevice,devicetype/name/model
+192.168.0.1,1st floor,home wifi router
+192.168.0.2,ground floor,NAS storage
