@@ -1,0 +1,4 @@
+ip address of esp,which is connected with device name
+192.168.0.200,connected my pc
+192.168.0.201,connected my NAS
+192.168.0.203,connected with laptop
