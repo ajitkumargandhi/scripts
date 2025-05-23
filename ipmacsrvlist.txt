@@ -1,0 +1,4 @@
+serverip,mac address,servername
+192.168.0.2,b4:2e:99:0c:68:11,NAS server
+192.168.0.3,00:e0:4f:68:11:12,my pc
+192.168.0.4,1c:1b:0d:15:b2:13,my laptop 
