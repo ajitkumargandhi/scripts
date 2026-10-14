@@ -72,7 +72,7 @@
 LOG_FILE=("/var/log/apache2/access.log"
 "/var/log/apache2/error.log"
 )
-SEARCH_STRING='" (444|401|404|400) '
+SEARCH_STRING=" 422 422 | 444 0 | 401 401 | 404 404 | 400 "
 # Time in seconds for IP to be blocked (e.g., 1 hour = 3600)
 BAN_TIME=3600
 # Log file to track blocked IPs
