@@ -1,9 +1,35 @@
 #!/bin/bash
-
-# Ubuntu Comprehensive Cleanup Script (Safe Mode)
-# Targets: Docker, NVM, APT, Logs, and System Temp files
-# Features: Dry-run previews and user confirmation before every deletion.
-
+# ============================================================================
+#  ubuntu-cleanup.sh
+#  Ubuntu Comprehensive Disk-Space Cleanup (Safe Mode)
+# ============================================================================
+#  PURPOSE:
+#    Interactively frees disk space across APT, Docker, NVM, journal logs,
+#    user caches, temp files, and disabled snap revisions.
+#
+#  SAFETY:
+#    • Every step shows a DRY-RUN preview before executing.
+#    • Requires explicit 'y' confirmation per step (set AUTO_CONFIRM=true
+#      for unattended/cron use).
+#    • 'set -e' aborts on unexpected errors.
+#    • Docker, NVM, and Snap steps auto-skip if not installed.
+#
+#  CLEANUP TARGETS:
+#    1. APT      – caches, orphaned packages, .deb archives, package lists
+#    2. Docker   – stopped containers, dangling images, unused volumes, builder
+#    3. NVM      – $NVM_DIR/.cache
+#    4. Logs     – journalctl entries older than 7 days
+#    5. User Caches – thumbnails, pip, npm, yarn (per /home/* user)
+#    6. Temp     – /tmp and /var/tmp contents
+#    7. Snap     – disabled (old) snap revisions only
+#
+#  REQUIREMENTS:
+#    • Run as root: sudo ./ubuntu-cleanup.sh
+#    • Docker, NVM, Snap are optional (skipped if absent)
+#
+#  USAGE:
+#    sudo ./ubuntu-cleanup.sh
+# ============================================================================
 set -e
 home_dir=(/home/*)
 
@@ -33,7 +59,7 @@ confirm_action() {
     if [ "$AUTO_CONFIRM" = true ]; then
         response="y"
     else
-        read -r -p "❓ Do you want to proceed with removing these items? [y/N] " -n 1 response
+        read -r -p "❓ Do you want to proceed with removing $step_name these items? [y/N] " -n 1 response
         echo "" # Newline
     fi
 
