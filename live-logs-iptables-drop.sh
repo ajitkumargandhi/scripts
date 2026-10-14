@@ -1,10 +1,78 @@
 #!/bin/bash
+# ============================================================================
+#  apache-ip-blocker.sh
+#  Real-Time Apache Log Monitor & Auto IP Blocker (Ban → Unban → Re-ban Loop)
+# ============================================================================
+#
+#  HOW IT WORKS:
+#  ─────────────────────────────────────────────────────────────────────────
+#  1. Tails Apache access/error logs in real-time (handles log rotation).
+#  2. Greps for HTTP error codes: 400, 401, 404, 444.
+#  3. Extracts the source IP and validates it.
+#  4. If not already blocked → adds iptables DROP rule (all traffic from IP).
+#  5. Logs the event to /var/log/iptables/blocked_ips.log.
+#  6. Schedules auto-unblock after BAN_TIME seconds (default: 3600 = 1 hr).
+#  7. If attacker hits again after unblock → immediately re-blocked.
+#     (No persistence by design — the ban/unban/re-ban loop is the shield.)
+#
+#  DEPENDENCIES:
+#  ─────────────────────────────────────────────────────────────────────────
+#  • iptables (installed by default on Ubuntu)
+#  • atd daemon (for scheduled unblocking)
+#  • Apache 2 log files must exist at the paths in LOG_FILE array
+#
+#  TO RUN AS A SYSTEMD SERVICE (one-time setup):
+#  ─────────────────────────────────────────────────────────────────────────
+#  Step 1: Ensure 'atd' is running
+#      sudo systemctl enable --now atd
+#
+#  Step 2: Create the log directory
+#      sudo mkdir -p /var/log/iptables
+#
+#  Step 3: Create the systemd unit file
+#      sudo nano /etc/systemd/system/apache-ip-blocker.service
+#
+#      Paste this content:
+#
+#      [Unit]
+#      Description=Apache Log IP Auto-Blocker
+#      After=network.target apache2.service
+#
+#      [Service]
+#      Type=simple
+#      ExecStart=/path/to/your/script/live-logs-iptables-drop.sh
+#      Restart=always
+#      RestartSec=5
+#
+#      [Install]
+#      WantedBy=multi-user.target
+#
+#  Step 4: Replace /path/to/your/script/ with the ACTUAL path
+#      (e.g., /opt/scripts/live-logs-iptables-drop.sh)
+#
+#  Step 5: Enable and start the service
+#      sudo systemctl daemon-reload
+#      sudo systemctl enable --now apache-ip-blocker
+#
+#  Step 6: Verify it's running
+#      sudo systemctl status apache-ip-blocker
+#      tail -f /var/log/iptables/blocked_ips.log
+#
+#  NOTES:
+#  ─────────────────────────────────────────────────────────────────────────
+#  • No iptables persistence is configured (by design).
+#  • On reboot, the systemd service auto-starts within seconds,
+#    so the attacker is re-blocked on their very next probe.
+#  • To change ban duration, edit BAN_TIME (in seconds) in this script.
+#  • To add more trusted IPs to whitelist, add them after grep -v:
+#      | grep -v "192.168.0.1" | grep -v "10.0.0.5" | ...
+# ============================================================================
 
 # Configuration
 LOG_FILE=("/var/log/apache2/access.log"
 "/var/log/apache2/error.log"
 )
-SEARCH_STRING=" 444 0 | 401 401 | 404 404 | 400 400 "
+SEARCH_STRING='" (444|401|404|400) '
 # Time in seconds for IP to be blocked (e.g., 1 hour = 3600)
 BAN_TIME=3600
 # Log file to track blocked IPs
